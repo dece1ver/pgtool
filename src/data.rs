@@ -1,8 +1,9 @@
 use core::fmt;
+use std::io;
 
 use serde::{Deserialize, Serialize};
 
-const NUMBER_SIGNS_AREOPAG: &[&str] = &[
+const NUMBER_SIGNS_AREOPAG_RU: &[&str] = &[
     "АР",
     "АРМ",
     "АРКП",
@@ -17,15 +18,23 @@ const NUMBER_SIGNS_AREOPAG: &[&str] = &[
     "АРФС",
     "М8Л",
     "ТОС",
-    "AP",
 ];
-const NUMBER_SIGNS_THIRD: &[&str] = &["ТОМ3", "ИН0", "ИНО"];
+
+const NUMBER_SIGNS_AREOPAG_EN: &[&str] = &[
+    "AP", "AR", "APM", "ARM", "APKP", "ARKP", "ARPGA", "APKO", "ARKO", "ARNP", "ATG", "NMG", "AMG",
+    "APN", "ARN", "APC", "APS", "ARC", "ARS", "APFC", "APFS", "ARFC", "ARFS", "M8L", "TOS",
+];
+
+const NUMBER_SIGNS_THIRD_RU: &[&str] = &["ТОМ3", "ИН0", "ИНО"];
+const NUMBER_SIGNS_THIRD_EN: &[&str] = &["TOM3", "IN0", "INO"];
 const NUMBER_SIGNS_GOST: &[&str] = &["10-", "15-", "25-", "32-", "40-", "50-"];
 
 pub(crate) fn is_part_dir(name: &str) -> bool {
-    NUMBER_SIGNS_AREOPAG
+    NUMBER_SIGNS_AREOPAG_RU
         .iter()
-        .chain(NUMBER_SIGNS_THIRD)
+        .chain(NUMBER_SIGNS_AREOPAG_EN)
+        .chain(NUMBER_SIGNS_THIRD_RU)
+        .chain(NUMBER_SIGNS_THIRD_EN)
         .chain(NUMBER_SIGNS_GOST)
         .any(|sign| name.contains(sign))
 }
@@ -224,4 +233,8 @@ impl fmt::Display for Machine {
         }
         Ok(())
     }
+}
+
+pub(crate) trait PathExt {
+    fn read_lines(&self) -> io::Result<impl Iterator<Item = io::Result<String>>>;
 }

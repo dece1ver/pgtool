@@ -1,5 +1,7 @@
 use std::{
     collections::HashSet,
+    fs::File,
+    io::{self, BufRead},
     path::{Path, PathBuf},
     sync::OnceLock,
 };
@@ -8,7 +10,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
-use crate::data::{Machine, Part, PartGroup, Program, Tool, is_part_dir};
+use crate::data::{Machine, Part, PartGroup, PathExt, Program, Tool, is_part_dir};
 use anyhow::{Result, anyhow};
 
 pub mod gcode;
@@ -105,6 +107,18 @@ fn collect_parts(group_path: &Path) -> Vec<Part> {
         .collect()
 }
 
+fn has_subgroup_candidates(path: &Path) -> bool {
+    path.read_dir()
+        .map(|entries| {
+            entries.flatten().any(|e| {
+                e.file_type().map(|t| t.is_dir()).unwrap_or(false)
+                    && !is_part_dir(&e.file_name().to_string_lossy())
+                    && has_part_children(&e.path())
+            })
+        })
+        .unwrap_or(false)
+}
+
 fn collect_part_groups(path: &Path, groups: &mut Vec<PartGroup>, pb: &ProgressBar) -> Result<()> {
     for entry in path.read_dir()?.flatten() {
         let entry_path = entry.path();
@@ -122,7 +136,9 @@ fn collect_part_groups(path: &Path, groups: &mut Vec<PartGroup>, pb: &ProgressBa
             continue;
         }
 
-        if has_part_children(&entry_path) {
+        let is_group = has_part_children(&entry_path) && !has_subgroup_candidates(&entry_path);
+
+        if is_group {
             pb.set_message(name.clone());
             let parts = collect_parts(&entry_path);
             groups.push(PartGroup::new(name, parts));
@@ -216,5 +232,12 @@ fn corrector_char(value: u8) -> char {
         23 => 'Y',
         24 => 'Z',
         _ => '\0',
+    }
+}
+
+impl<T: AsRef<Path>> PathExt for T {
+    fn read_lines(&self) -> io::Result<impl Iterator<Item = io::Result<String>>> {
+        let file = File::open(self)?;
+        Ok(io::BufReader::with_capacity(64 * 1024, file).lines())
     }
 }
