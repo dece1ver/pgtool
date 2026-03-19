@@ -15,7 +15,20 @@ mod parser;
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    let write_fn: fn(&Path, &[Machine], bool) -> Result<()> = match args
+        .output
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .as_deref()
+    {
+        Some("json") => write_json,
+        Some("csv") => write_csv,
+        Some(other) => bail!("Вывод в файл с расширением {} не поддерживается", other),
+        None => bail!("Не указано расширение выходного файла"),
+    };
+
     let timer = Instant::now();
+
     let mut machines = init_machines(&args.archive)?;
     machines.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -33,17 +46,7 @@ fn main() -> Result<()> {
     println!("Программ:  {}", total_programs);
     println!("Время:     {:.3?}", timer.elapsed());
 
-    match args.output.extension() {
-        None => bail!("Не указано расширение выходного файла"),
-        Some(ext) => {
-            let ext = ext.to_string_lossy().to_lowercase();
-            match ext.as_str() {
-                "json" => write_json(&args.output, &machines, args.full)?,
-                "csv" => write_csv(&args.output, &machines, args.full)?,
-                other => bail!("Вывод в файл с расширением {} не поддерживается", other),
-            }
-        }
-    }
+    write_fn(&args.output, &machines, args.full)?;
 
     Ok(())
 }
