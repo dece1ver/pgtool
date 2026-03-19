@@ -9,7 +9,7 @@ pub(crate) struct Args {
     pub(crate) archive: PathBuf,
     /// Включить полные данные (детали и программы) в JSON
     pub(crate) full: bool,
-    /// Путь к выходному JSON-файлу (по умолчанию output.json)
+    /// Путь к выходному файлу (по умолчанию .\output.json)
     pub(crate) output: PathBuf,
 }
 
@@ -76,7 +76,7 @@ impl Args {
             ));
         }
 
-        let output = output.unwrap_or_else(|| PathBuf::from("output.json"));
+        let output = output.unwrap_or_else(|| PathBuf::from(".\\output.json"));
 
         Ok(Self {
             archive,
@@ -98,7 +98,7 @@ impl Args {
     <АРХИВ>          Путь к корневой директории с программами станков (обязательный)
 
 ФЛАГИ:
-    -o, --output <ПУТЬ>   Путь к выходному JSON-файлу [по умолчанию: output.json]
+    -o, --output <ПУТЬ>   Путь к выходному файлу (json|csv) [по умолчанию: output.json]
     -f, --full            Включить полные данные (детали и программы) в JSON
     -h, --help            Показать эту справку и выйти
     -V, --version         Показать версию и выйти
@@ -112,7 +112,7 @@ impl Args {
 
 ПРИМЕРЫ:
     {BIN_NAME} D:\\Programs
-    {BIN_NAME} D:\\Programs --output report.json
+    {BIN_NAME} D:\\Programs --output .\\report.csv
     {BIN_NAME} D:\\Programs -fo C:\\reports\\tools.json"
         );
     }

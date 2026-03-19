@@ -21,4 +21,3 @@ fn parse_tool_call(line: &str) -> Option<u32> {
         RE.get_or_init(|| Regex::new(r"(?i)tool\s+call\s+(\d+)").expect("failed create regex"));
     re.captures(line)?.get(1)?.as_str().parse().ok()
 }
-

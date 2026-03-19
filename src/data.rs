@@ -238,3 +238,18 @@ impl fmt::Display for Machine {
 pub(crate) trait PathExt {
     fn read_lines(&self) -> io::Result<impl Iterator<Item = io::Result<String>>>;
 }
+
+#[derive(Serialize)]
+pub(crate) struct CsvRow<'a> {
+    pub(crate) machine: &'a str,
+    pub(crate) group: &'a str,
+    pub(crate) avg_programs: usize,
+}
+
+#[derive(Serialize)]
+pub(crate) struct CsvFullRow<'a> {
+    pub(crate) machine: &'a str,
+    pub(crate) group: &'a str,
+    pub(crate) part: &'a str,
+    pub(crate) avg_programs: usize,
+}
