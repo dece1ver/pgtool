@@ -239,6 +239,14 @@ pub(crate) trait PathExt {
     fn read_lines(&self) -> io::Result<impl Iterator<Item = io::Result<String>>>;
 }
 
+pub(crate) trait CharExt {
+    fn is_cyrillic(&self) -> bool;
+}
+
+pub(crate) trait StrExt {
+    fn starts_with_cyrillic(&self) -> bool;
+}
+
 #[derive(Serialize)]
 pub(crate) struct CsvRow<'a> {
     pub(crate) machine: &'a str,

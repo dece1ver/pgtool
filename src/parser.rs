@@ -10,7 +10,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
-use crate::data::{Machine, Part, PartGroup, PathExt, Program, Tool, is_part_dir};
+use crate::data::{CharExt, Machine, Part, PartGroup, PathExt, Program, StrExt, Tool, is_part_dir};
 use anyhow::{Result, anyhow};
 
 pub mod gcode;
@@ -139,6 +139,9 @@ fn collect_part_groups(path: &Path, groups: &mut Vec<PartGroup>, pb: &ProgressBa
         let is_group = has_part_children(&entry_path) && !has_subgroup_candidates(&entry_path);
 
         if is_group {
+            if !name.starts_with_cyrillic() {
+                continue;
+            };
             pb.set_message(name.clone());
             let parts = collect_parts(&entry_path);
             groups.push(PartGroup::new(name, parts));
@@ -239,5 +242,26 @@ impl<T: AsRef<Path>> PathExt for T {
     fn read_lines(&self) -> io::Result<impl Iterator<Item = io::Result<String>>> {
         let file = File::open(self)?;
         Ok(io::BufReader::with_capacity(64 * 1024, file).lines())
+    }
+}
+
+impl CharExt for char {
+    fn is_cyrillic(&self) -> bool {
+        matches!(self,
+            '\u{0400}'..='\u{04FF}' |  // Cyrillic
+            '\u{0500}'..='\u{052F}' |  // Cyrillic Supplement
+            '\u{2DE0}'..='\u{2DFF}' |  // Cyrillic Extended-A
+            '\u{A640}'..='\u{A69F}'    // Cyrillic Extended-B
+        )
+    }
+}
+
+impl<T: AsRef<str>> StrExt for T {
+    fn starts_with_cyrillic(&self) -> bool {
+        self.as_ref()
+            .chars()
+            .next()
+            .map(|c| c.is_alphabetic() && c.is_cyrillic())
+            .unwrap_or(false)
     }
 }
